@@ -18,13 +18,9 @@ export default function ProductGrid() {
       <div className="container mx-auto px-4">
         <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-x-3 gap-y-2 max-md:mb-4 lg:mb-10 lg:flex-nowrap lg:items-end lg:gap-6">
           <div className="min-w-0 flex-1">
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-2 text-balance max-md:text-2xl">
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-balance max-md:text-2xl">
               Featured
             </h2>
-            <p className="text-muted-foreground text-lg max-md:text-base">
-              Up to eight picks. Mark <span className="text-foreground/90">Featured on home</span> in Admin
-              to show a product here first.
-            </p>
           </div>
           <Link to="/products" className="shrink-0 max-lg:pt-0.5">
             <Button
