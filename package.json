@@ -1,0 +1,12 @@
+{
+  "name": "shopping-mall-demo",
+  "private": true,
+  "description": "Heroku detects Node from this file; API code is in server/",
+  "scripts": {
+    "start": "node server/src/server.js",
+    "heroku-postbuild": "npm ci --omit=dev --prefix server"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

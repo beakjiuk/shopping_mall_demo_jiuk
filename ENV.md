@@ -5,6 +5,14 @@
 
 ---
 
+## Heroku 빌드가 `No default language could be detected` 로 실패할 때
+
+이건 **환경 변수 미설정 때문이 아닙니다.** 저장소 **루트**에 `package.json`이 없으면 Heroku가 Node 앱인지 몰라 빌드팩을 고르지 못합니다.
+
+이 레포는 루트에 **`package.json` + `Procfile`** 을 두고, `heroku-postbuild`에서 **`server/` 의존성만 `npm ci`** 하도록 맞춰 두었습니다. 그다음 **Deploy** 를 다시 시도하면 됩니다.
+
+---
+
 ## Server (Heroku 등 Node 호스팅)
 
 | 변수 | 필수 | 설명 |
