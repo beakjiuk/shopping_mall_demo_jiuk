@@ -1,0 +1,30 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('lucide-react')) return 'icons'
+          if (id.includes('@portone')) return 'portone'
+          if (id.includes('react-router')) return 'router'
+          if (id.includes('swr')) return 'swr'
+          if (id.includes('react-dom') || id.includes('/react/') || id.includes('\\react\\')) return 'react-core'
+        },
+      },
+    },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+})

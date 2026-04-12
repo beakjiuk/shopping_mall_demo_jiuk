@@ -1,0 +1,39 @@
+# 환경 변수 (로컬 / Heroku / Vercel)
+
+로컬은 `server/.env`, `client/.env`에 두고 **Git에는 올리지 않습니다.**  
+배포 시에는 아래 표대로 **각 플랫폼 Config Vars / Environment Variables**에만 넣으면 됩니다.
+
+---
+
+## Server (Heroku 등 Node 호스팅)
+
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `MONGODB_URI` | ✅ | Atlas `mongodb+srv://…` 연결 문자열 (DB 이름 경로 포함 권장, 예: `/shopping_mall_demo`) |
+| `JWT_SECRET` | ✅ | 프로덕션용 긴 랜덤 문자열 (로컬과 다르게 새로 생성) |
+| `NODE_ENV` | 권장 | `production` |
+| `PORT` | 선택 | Heroku는 자동 설정. 로컬만 `5000` 등 |
+| `CLIENT_ORIGIN` | ✅ | Vercel 프로덕션 URL, 예: `https://프로젝트.vercel.app` (CORS) |
+| `PORTONE_V2_API_SECRET` | 결제 시 | 포트원 콘솔 V2 API Secret — 결제 검증 없으면 비워도 됨 |
+| `USD_TO_KRW` | 선택 | 기본 `1350` 근처 |
+| `JSON_BODY_LIMIT` | 선택 | 기본 외 대용량 바디 필요 시만 |
+| `DNS_SERVERS` | 선택 | Windows에서 `querySrv ECONNREFUSED` 나면 `8.8.8.8,1.1.1.1` (쉼표 구분) |
+
+---
+
+## Client (Vercel — `VITE_` 만 빌드에 포함)
+
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `VITE_PORTONE_STORE_ID` | 결제 UI 시 | 포트원 스토어 ID |
+| `VITE_PORTONE_CHANNEL_KEY` | 결제 UI 시 | 포트원 채널 키 |
+
+API 주소: 이 프로젝트는 브라우저가 **`/api/...`** 로 요청합니다.  
+Vercel에서 **Heroku API로 프록시**하려면 `client/vercel.json` 등으로 `/api` → `https://xxx.herokuapp.com/api` **rewrite**를 두는 방식이 일반적입니다.
+
+---
+
+## 배포 후 한 번
+
+- Heroku: `heroku run npm run seed --app <앱이름>` (DB가 비었을 때)
+- Atlas **Network Access**: Heroku는 IP가 고정이 아니면 `0.0.0.0/0` 허용이 흔함

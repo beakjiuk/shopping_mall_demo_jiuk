@@ -1,0 +1,29 @@
+# Secrets (never commit)
+server/.env
+client/.env
+.env
+.env.local
+.env.*.local
+
+# Dependencies & build output
+node_modules/
+server/node_modules/
+client/node_modules/
+client/dist/
+client/dist-ssr/
+client/.vite/
+client/_trash/
+
+# Large / unused copy
+client_next_backup/
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+
+# Local tooling
+.vscode/*
+!.vscode/extensions.json
