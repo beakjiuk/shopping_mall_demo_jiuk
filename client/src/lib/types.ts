@@ -16,6 +16,8 @@ export type Product = {
   price: number;
   imageUrl: string;
   stock: number;
+  /** ISO date from API; used for newest-first catalog ordering */
+  createdAt?: string;
   brand?: string;
   category?: string;
   rating?: number;
@@ -23,6 +25,8 @@ export type Product = {
   originalPrice?: number | null;
   isNew?: boolean;
   isBestSeller?: boolean;
+  /** When true, home Featured section lists this product first (up to 8 slots total). */
+  featuredHome?: boolean;
   fastDelivery?: boolean;
   images?: string[];
   features?: string[];

@@ -1,4 +1,5 @@
 import type { Product } from './types'
+import { sortProductsNewestFirst } from './productSort'
 
 export function isAppleBrand(p: Product): boolean {
   return (p.brand || '').toLowerCase() === 'apple'
@@ -25,8 +26,8 @@ export function pickHomeAppleProducts(catalog: Product[]): Product[] {
   return out
 }
 
-/** Home “Featured” grid: up to 8 items, Apple limited to spotlight pair, stable catalog order. */
-export function pickHomeFeaturedProducts(catalog: Product[]): Product[] {
+/** Curated picks when the grid is not filled by `featuredHome` pins. */
+function pickHomeFeaturedCurated(catalog: Product[]): Product[] {
   const homeApple = pickHomeAppleProducts(catalog)
   const allowedAppleIds = new Set(homeApple.map((p) => p._id))
   const filtered = catalog.filter((p) => !isAppleBrand(p) || allowedAppleIds.has(p._id))
@@ -35,4 +36,25 @@ export function pickHomeFeaturedProducts(catalog: Product[]): Product[] {
   nonApple.sort((a, b) => (order.get(a._id) ?? 0) - (order.get(b._id) ?? 0))
   const nonSlots = Math.max(0, 8 - homeApple.length)
   return [...nonApple.slice(0, nonSlots), ...homeApple].slice(0, 8)
+}
+
+/**
+ * Home “Featured” grid: up to 8 items.
+ * Products with `featuredHome` are listed first (newest among pins), then the usual Apple + catalog curation.
+ */
+export function pickHomeFeaturedProducts(catalog: Product[]): Product[] {
+  const pinned = sortProductsNewestFirst(catalog.filter((p) => p.featuredHome)).slice(0, 8)
+  const pinnedIds = new Set(pinned.map((p) => p._id))
+  if (pinned.length >= 8) return pinned
+  const remainder = catalog.filter((p) => !pinnedIds.has(p._id))
+  const filler = pickHomeFeaturedCurated(remainder)
+  const out: Product[] = [...pinned]
+  const seen = pinnedIds
+  for (const p of filler) {
+    if (out.length >= 8) break
+    if (seen.has(p._id)) continue
+    out.push(p)
+    seen.add(p._id)
+  }
+  return out
 }

@@ -1,5 +1,6 @@
 import useSWR from 'swr'
 import { resolveApiUrl } from './api'
+import { sortProductsNewestFirst } from './productSort'
 import type { Product } from './types'
 
 const swrOpts = {
@@ -23,7 +24,7 @@ export function useProductsCatalog() {
     '/api/products',
     async (url) => {
       const j = await getOkJson<{ ok: true; products: Product[] }>(url)
-      return j.products
+      return sortProductsNewestFirst(j.products)
     },
     swrOpts,
   )

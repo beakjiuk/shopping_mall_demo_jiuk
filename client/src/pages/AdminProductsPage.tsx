@@ -182,6 +182,7 @@ export default function AdminProductsPage() {
   const [brand, setBrand] = useState('')
   const [isNew, setIsNew] = useState(false)
   const [isBestSeller, setIsBestSeller] = useState(false)
+  const [featuredHome, setFeaturedHome] = useState(false)
   const [createFastDelivery, setCreateFastDelivery] = useState(false)
   const [createFeaturesText, setCreateFeaturesText] = useState('')
   const [sizesCsv, setSizesCsv] = useState('')
@@ -197,6 +198,7 @@ export default function AdminProductsPage() {
   const [eBrand, setEBrand] = useState('')
   const [eIsNew, setEIsNew] = useState(false)
   const [eIsBestSeller, setEIsBestSeller] = useState(false)
+  const [eFeaturedHome, setEFeaturedHome] = useState(false)
   const [eFastDelivery, setEFastDelivery] = useState(false)
   const [eSizesCsv, setESizesCsv] = useState('')
   const [eFeaturesText, setEFeaturesText] = useState('')
@@ -247,6 +249,7 @@ export default function AdminProductsPage() {
     setEBrand(editing.brand || '')
     setEIsNew(!!editing.isNew)
     setEIsBestSeller(!!editing.isBestSeller)
+    setEFeaturedHome(!!editing.featuredHome)
     setEFastDelivery(!!editing.fastDelivery)
     setESizesCsv((editing.sizes || []).join(', '))
     setEFeaturesText((editing.features || []).join('\n'))
@@ -294,6 +297,7 @@ export default function AdminProductsPage() {
           brand: brand.trim(),
           isNew,
           isBestSeller,
+          featuredHome,
           fastDelivery: createFastDelivery,
           sizes: resolvedCategory() === 'Fashion' ? parseSizesCsv(sizesCsv) : [],
         },
@@ -309,6 +313,7 @@ export default function AdminProductsPage() {
       setBrand('')
       setIsNew(false)
       setIsBestSeller(false)
+      setFeaturedHome(false)
       setCreateFastDelivery(false)
       setCreateFeaturesText('')
       setSizesCsv('')
@@ -361,6 +366,7 @@ export default function AdminProductsPage() {
           brand: eBrand.trim(),
           isNew: eIsNew,
           isBestSeller: eIsBestSeller,
+          featuredHome: eFeaturedHome,
           fastDelivery: eFastDelivery,
           sizes: resolvedEditCategory() === 'Fashion' ? parseSizesCsv(eSizesCsv) : [],
           originalPrice,
@@ -518,6 +524,15 @@ export default function AdminProductsPage() {
               />
               Express 배지 표시
             </label>
+            <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={featuredHome}
+                onChange={(e) => setFeaturedHome(e.target.checked)}
+                className="rounded border-border"
+              />
+              홈 Featured에 우선 표시
+            </label>
           </div>
         </div>
 
@@ -555,6 +570,7 @@ export default function AdminProductsPage() {
                         {p.colors?.length ? ` · 색상 ${p.colors.join('/')}` : ''}
                         {p.isNew ? ' · New' : ''}
                         {p.isBestSeller ? ' · Best' : ''}
+                        {p.featuredHome ? ' · Featured' : ''}
                       </p>
                     </div>
                   </div>
@@ -730,6 +746,15 @@ export default function AdminProductsPage() {
                       className="rounded border-border"
                     />
                     Express
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eFeaturedHome}
+                      onChange={(e) => setEFeaturedHome(e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    홈 Featured
                   </label>
                 </div>
               </div>

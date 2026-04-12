@@ -16,6 +16,7 @@ const productSchema = new mongoose.Schema(
     originalPrice: { type: Number, default: null },
     isNew: { type: Boolean, default: false },
     isBestSeller: { type: Boolean, default: false },
+    featuredHome: { type: Boolean, default: false },
     fastDelivery: { type: Boolean, default: false },
     images: { type: [String], default: [] },
     features: { type: [String], default: [] },

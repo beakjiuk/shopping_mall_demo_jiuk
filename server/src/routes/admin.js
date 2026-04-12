@@ -34,7 +34,7 @@ const featuresFieldUpdate = z.array(z.string().trim().max(200)).max(40).optional
 
 router.get("/products", async (req, res, next) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }).limit(500).lean();
+    const products = await Product.find().sort({ createdAt: -1, _id: -1 }).limit(500).lean();
     res.json({ ok: true, products });
   } catch (e) {
     next(e);
@@ -54,6 +54,7 @@ router.post("/products", async (req, res, next) => {
         brand: z.string().trim().optional().default(""),
         isNew: z.boolean().optional().default(false),
         isBestSeller: z.boolean().optional().default(false),
+        featuredHome: z.boolean().optional().default(false),
         fastDelivery: z.boolean().optional().default(false),
         sizes: sizesFieldCreate,
         images: imagesFieldCreate,
@@ -86,6 +87,7 @@ router.post("/products", async (req, res, next) => {
       brand: body.brand,
       isNew: body.isNew,
       isBestSeller: body.isBestSeller,
+      featuredHome: body.featuredHome,
       fastDelivery: body.fastDelivery,
       sizes: body.sizes,
       originalPrice: body.originalPrice ?? null,
@@ -115,6 +117,7 @@ router.put("/products/:id", async (req, res, next) => {
         brand: z.string().trim().optional(),
         isNew: z.boolean().optional(),
         isBestSeller: z.boolean().optional(),
+        featuredHome: z.boolean().optional(),
         fastDelivery: z.boolean().optional(),
         sizes: sizesFieldUpdate,
         images: imagesFieldUpdate,

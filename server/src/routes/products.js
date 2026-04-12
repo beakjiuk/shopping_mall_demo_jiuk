@@ -22,7 +22,7 @@ router.get("/", async (req, res, next) => {
       try {
         const products = await Product.aggregate([
           { $match: { $text: { $search: search } } },
-          { $sort: { score: { $meta: "textScore" } } },
+          { $sort: { score: { $meta: "textScore" }, createdAt: -1, _id: -1 } },
           { $limit: limit },
           { $project: { features: 0 } }
         ]);
@@ -34,7 +34,7 @@ router.get("/", async (req, res, next) => {
       }
       const products = await Product.find(regexCatalogFilter(search))
         .select("-features")
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: -1, _id: -1 })
         .limit(limit)
         .lean();
       res.set("Cache-Control", CACHE_PUBLIC);
@@ -44,7 +44,7 @@ router.get("/", async (req, res, next) => {
 
     const products = await Product.find({})
       .select("-features")
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .limit(limit)
       .lean();
     res.set("Cache-Control", CACHE_PUBLIC);

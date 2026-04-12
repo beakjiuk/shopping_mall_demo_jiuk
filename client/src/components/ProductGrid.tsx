@@ -22,7 +22,8 @@ export default function ProductGrid() {
               Featured
             </h2>
             <p className="text-muted-foreground text-lg max-md:text-base">
-              Eight curated picks from the catalog.
+              Up to eight picks. Mark <span className="text-foreground/90">Featured on home</span> in Admin
+              to show a product here first.
             </p>
           </div>
           <Link to="/products" className="shrink-0 max-lg:pt-0.5">
