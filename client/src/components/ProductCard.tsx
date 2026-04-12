@@ -78,18 +78,13 @@ function ProductCard({ product }: { product: Product }) {
         />
 
         <div
-          className={`absolute inset-x-3 bottom-3 max-md:inset-x-2 max-md:bottom-1.5 transition-all duration-300 z-20 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 max-md:opacity-100 max-md:translate-y-0'
+          className={`max-md:hidden absolute inset-x-3 bottom-3 transition-all duration-300 z-20 ${
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          <Button
-            type="button"
-            className="w-full gap-2 max-md:min-h-0 max-md:h-8 max-md:px-2.5 max-md:py-0 max-md:text-[11px] max-md:gap-1 max-md:rounded-md max-md:font-medium"
-            disabled={busy}
-            onClick={quickAdd}
-          >
-            <ShoppingBag className="h-4 w-4 max-md:h-3 max-md:w-3 shrink-0" />
+          <Button type="button" className="w-full gap-2" disabled={busy} onClick={quickAdd}>
+            <ShoppingBag className="h-4 w-4 shrink-0" />
             {busy ? 'Adding…' : 'Add to Cart'}
           </Button>
         </div>
