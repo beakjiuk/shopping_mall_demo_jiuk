@@ -78,18 +78,18 @@ function ProductCard({ product }: { product: Product }) {
         />
 
         <div
-          className={`absolute inset-x-3 bottom-3 max-md:inset-x-2 max-md:bottom-2 transition-all duration-300 z-20 ${
+          className={`absolute inset-x-3 bottom-3 max-md:inset-x-2 max-md:bottom-1.5 transition-all duration-300 z-20 ${
             isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 max-md:opacity-100 max-md:translate-y-0'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
           <Button
             type="button"
-            className="w-full gap-2 max-md:min-h-11 max-md:text-sm"
+            className="w-full gap-2 max-md:min-h-0 max-md:h-8 max-md:px-2.5 max-md:py-0 max-md:text-[11px] max-md:gap-1 max-md:rounded-md max-md:font-medium"
             disabled={busy}
             onClick={quickAdd}
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag className="h-4 w-4 max-md:h-3 max-md:w-3 shrink-0" />
             {busy ? 'Adding…' : 'Add to Cart'}
           </Button>
         </div>
@@ -107,11 +107,11 @@ function ProductCard({ product }: { product: Product }) {
               navigateTo: '/wishlist',
             })
           }}
-          className="absolute top-3 right-3 max-md:top-2 max-md:right-3 p-2 max-md:inline-flex max-md:h-10 max-md:w-10 max-md:items-center max-md:justify-center rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors z-20 touch-manipulation"
+          className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors z-20 touch-manipulation max-md:top-1.5 max-md:right-2 max-md:inline-flex max-md:h-8 max-md:w-8 max-md:items-center max-md:justify-center max-md:p-0"
           aria-label="Toggle wishlist"
         >
           <Heart
-            className={`h-5 w-5 transition-colors ${
+            className={`h-5 w-5 max-md:h-3.5 max-md:w-3.5 transition-colors ${
               wishlist.has(product._id) ? 'fill-destructive text-destructive' : 'text-foreground'
             }`}
           />
