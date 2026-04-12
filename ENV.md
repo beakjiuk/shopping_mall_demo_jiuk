@@ -31,13 +31,20 @@
 
 ## Client (Vercel — `VITE_` 만 빌드에 포함)
 
+### Vercel 대시보드에서 꼭 확인 (404 나올 때)
+
+1. **Root Directory** → 반드시 **`client`** (레포 루트에 Heroku용 `package.json`이 있어서, 루트로 두면 Vite가 아니라 잘못 빌드되거나 404가 납니다.)
+2. **Framework Preset** → **Vite** (또는 Auto가 `client` 안에서 Vite를 잡도록)
+3. **`client/vercel.json`** 안의 `YOUR-HEROKU-APP` 를 본인 Heroku 앱 호스트로 바꾼 뒤 Git에 커밋·푸시 (또는 Vercel에서만 수정 불가하면 로컬에서 바꿔 푸시)
+
+### 환경 변수
+
 | 변수 | 필수 | 설명 |
 |------|------|------|
 | `VITE_PORTONE_STORE_ID` | 결제 UI 시 | 포트원 스토어 ID |
 | `VITE_PORTONE_CHANNEL_KEY` | 결제 UI 시 | 포트원 채널 키 |
 
-API 주소: 이 프로젝트는 브라우저가 **`/api/...`** 로 요청합니다.  
-Vercel에서 **Heroku API로 프록시**하려면 `client/vercel.json` 등으로 `/api` → `https://xxx.herokuapp.com/api` **rewrite**를 두는 방식이 일반적입니다.
+API는 브라우저가 **`/api/...`** 로 요청합니다. **`client/vercel.json`** 의 첫 번째 `rewrite`가 Heroku로 넘깁니다. 두 번째 줄은 **새로고침·직접 URL 진입** 시 SPA용으로 `index.html`로 보냅니다.
 
 ---
 
