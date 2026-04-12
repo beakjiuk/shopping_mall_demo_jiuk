@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Check,
   Heart,
   Minus,
@@ -39,6 +41,13 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedColor, setSelectedColor] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
+  const selectedImageRef = useRef(0)
+  const galleryDragRef = useRef<{ id: number | null; sx: number; sy: number; moved: boolean }>({
+    id: null,
+    sx: 0,
+    sy: 0,
+    moved: false,
+  })
 
   useEffect(() => {
     if (!product) return
@@ -62,14 +71,72 @@ export default function ProductPage() {
     return list.length ? list : [PRODUCT_IMAGE_FALLBACK]
   }, [product])
 
+  selectedImageRef.current = selectedImage
+
   /** Colors and gallery images are in the same order (index 0 = first color, etc.). */
-  const selectGalleryIndex = (index: number) => {
-    const max = Math.max(0, images.length - 1)
-    const i = Math.min(Math.max(0, index), max)
-    setSelectedImage(i)
-    const c = product?.colors?.[i]
-    if (c !== undefined) setSelectedColor(c)
-  }
+  const selectGalleryIndex = useCallback(
+    (index: number) => {
+      const max = Math.max(0, images.length - 1)
+      const i = Math.min(Math.max(0, index), max)
+      setSelectedImage(i)
+      const c = product?.colors?.[i]
+      if (c !== undefined) setSelectedColor(c)
+    },
+    [images.length, product?.colors],
+  )
+
+  const onGalleryPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (images.length <= 1) return
+      galleryDragRef.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false }
+      e.currentTarget.setPointerCapture(e.pointerId)
+    },
+    [images.length],
+  )
+
+  const onGalleryPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    const g = galleryDragRef.current
+    if (g.id !== e.pointerId) return
+    const dx = e.clientX - g.sx
+    const dy = e.clientY - g.sy
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) g.moved = true
+  }, [])
+
+  const onGalleryPointerUp = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      const g = galleryDragRef.current
+      if (g.id !== e.pointerId) return
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      } catch {
+        /* already released */
+      }
+      galleryDragRef.current = { id: null, sx: 0, sy: 0, moved: false }
+
+      if (images.length <= 1) return
+
+      const dx = e.clientX - g.sx
+      const dy = e.clientY - g.sy
+      const dist = Math.hypot(dx, dy)
+      const absX = Math.abs(dx)
+      const absY = Math.abs(dy)
+      const swipePx = 44
+      const cur = selectedImageRef.current
+
+      if (absX >= swipePx && absX > absY) {
+        selectGalleryIndex(dx < 0 ? cur + 1 : cur - 1)
+        return
+      }
+
+      if (dist < 16) {
+        const rect = e.currentTarget.getBoundingClientRect()
+        const relX = (e.clientX - rect.left) / rect.width
+        if (relX < 0.28) selectGalleryIndex(cur - 1)
+        else if (relX > 0.72) selectGalleryIndex(cur + 1)
+      }
+    },
+    [images.length, selectGalleryIndex],
+  )
 
   const selectColor = (color: string, colorIndex: number) => {
     setSelectedColor(color)
@@ -179,7 +246,22 @@ export default function ProductPage() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 max-md:gap-5">
               <div className="space-y-4 max-md:space-y-2">
                 <div className="max-md:-mx-4">
-                  <div className="relative aspect-square w-full bg-card overflow-hidden border border-border max-md:aspect-auto max-md:h-[min(92vw,440px)] max-md:max-h-[50svh] max-md:rounded-none max-md:border-x-0 max-md:border-t-0 lg:rounded-2xl">
+                  <div
+                    className="relative aspect-square w-full bg-card overflow-hidden border border-border max-md:aspect-auto max-md:h-[min(92vw,440px)] max-md:max-h-[50svh] max-md:rounded-none max-md:border-x-0 max-md:border-t-0 lg:rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    role="group"
+                    aria-label="Product images"
+                    tabIndex={images.length > 1 ? 0 : -1}
+                    onKeyDown={(e) => {
+                      if (images.length <= 1) return
+                      if (e.key === 'ArrowLeft') {
+                        e.preventDefault()
+                        selectGalleryIndex(selectedImage - 1)
+                      } else if (e.key === 'ArrowRight') {
+                        e.preventDefault()
+                        selectGalleryIndex(selectedImage + 1)
+                      }
+                    }}
+                  >
                   <SafeProductImage
                     src={images[selectedImage]}
                     candidates={images.filter((_, i) => i !== selectedImage)}
@@ -188,7 +270,18 @@ export default function ProductPage() {
                     loading="eager"
                   />
 
-                  <div className="absolute top-4 left-4 flex flex-col gap-2 max-md:top-2 max-md:left-2 max-md:gap-1">
+                  {images.length > 1 ? (
+                    <div
+                      className="absolute inset-0 z-[1] cursor-grab touch-none select-none active:cursor-grabbing"
+                      onPointerDown={onGalleryPointerDown}
+                      onPointerMove={onGalleryPointerMove}
+                      onPointerUp={onGalleryPointerUp}
+                      onPointerCancel={onGalleryPointerUp}
+                      aria-hidden
+                    />
+                  ) : null}
+
+                  <div className="pointer-events-none absolute top-4 left-4 z-[2] flex flex-col gap-2 max-md:top-2 max-md:left-2 max-md:gap-1">
                     {product.isNew ? (
                       <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-semibold max-md:px-2 max-md:py-0.5 max-md:text-[10px]">
                         New
@@ -207,12 +300,52 @@ export default function ProductPage() {
                   </div>
 
                   {product.fastDelivery ? (
-                    <div className="absolute top-4 right-4 max-md:top-2 max-md:right-2">
+                    <div className="pointer-events-none absolute top-4 right-4 z-[2] max-md:top-2 max-md:right-2">
                       <div className="flex items-center gap-1 bg-accent text-accent-foreground px-3 py-1.5 rounded-full text-sm font-semibold max-md:px-2 max-md:py-1 max-md:text-[10px]">
                         <Zap className="h-4 w-4 max-md:h-3 max-md:w-3" />
                         Express
                       </div>
                     </div>
+                  ) : null}
+
+                  {images.length > 1 ? (
+                    <>
+                      <button
+                        type="button"
+                        className="absolute left-2 top-1/2 z-[3] -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-2 text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 disabled:pointer-events-none disabled:opacity-25 max-md:left-1 max-md:p-1.5"
+                        aria-label="Previous image"
+                        disabled={selectedImage <= 0}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          selectGalleryIndex(selectedImage - 1)
+                        }}
+                      >
+                        <ChevronLeft className="h-5 w-5 max-md:h-4 max-md:w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 z-[3] -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-2 text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 disabled:pointer-events-none disabled:opacity-25 max-md:right-1 max-md:p-1.5"
+                        aria-label="Next image"
+                        disabled={selectedImage >= images.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          selectGalleryIndex(selectedImage + 1)
+                        }}
+                      >
+                        <ChevronRight className="h-5 w-5 max-md:h-4 max-md:w-4" />
+                      </button>
+                      <div
+                        className="pointer-events-none absolute inset-x-0 bottom-3 z-[3] flex justify-center gap-1.5 max-md:bottom-2"
+                        aria-hidden
+                      >
+                        {images.map((_, i) => (
+                          <span
+                            key={i}
+                            className={`h-1.5 rounded-full bg-white transition-[width,opacity] ${i === selectedImage ? 'w-5 opacity-100' : 'w-1.5 opacity-45'}`}
+                          />
+                        ))}
+                      </div>
+                    </>
                   ) : null}
                   </div>
                 </div>
