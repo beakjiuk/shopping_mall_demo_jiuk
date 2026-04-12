@@ -176,9 +176,9 @@ export default function ProductPage() {
         ) : null}
         {product ? (
           <>
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 max-md:gap-4">
-              <div className="space-y-4 max-md:space-y-2">
-                <div className="relative aspect-square max-md:aspect-auto max-md:h-[min(72vw,280px)] max-md:w-full bg-card rounded-2xl overflow-hidden border border-border">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 max-md:grid-cols-[minmax(96px,34vw)_minmax(0,1fr)] max-md:gap-x-3 max-md:gap-y-4 max-md:items-start">
+              <div className="space-y-4 max-md:space-y-1.5 max-md:min-w-0 max-md:self-start">
+                <div className="relative aspect-square w-full bg-card rounded-2xl overflow-hidden border border-border max-md:rounded-xl">
                   <SafeProductImage
                     src={images[selectedImage]}
                     candidates={images.filter((_, i) => i !== selectedImage)}
@@ -216,13 +216,13 @@ export default function ProductPage() {
                 </div>
 
                 {images.length > 1 ? (
-                  <div className="flex gap-3 flex-wrap max-md:flex-nowrap max-md:overflow-x-auto max-md:gap-1.5 max-md:pb-1 max-md:-mx-1 max-md:px-1 max-md:snap-x max-md:snap-mandatory max-md:[scrollbar-width:thin]">
+                  <div className="flex gap-3 flex-wrap max-md:flex-nowrap max-md:overflow-x-auto max-md:gap-1 max-md:pb-0.5 max-md:snap-x max-md:snap-mandatory max-md:[scrollbar-width:thin]">
                     {images.map((img, index) => (
                       <button
                         key={`${index}-${img}`}
                         type="button"
                         onClick={() => selectGalleryIndex(index)}
-                        className={`relative w-20 h-20 max-md:w-14 max-md:h-14 shrink-0 max-md:snap-start rounded-lg overflow-hidden border-2 transition-all ${
+                        className={`relative w-20 h-20 max-md:w-11 max-md:h-11 shrink-0 max-md:snap-start rounded-md overflow-hidden border-2 transition-all ${
                           selectedImage === index ? 'border-accent' : 'border-border hover:border-accent/50'
                         }`}
                         aria-label={`Select image ${index + 1}`}
@@ -239,18 +239,18 @@ export default function ProductPage() {
                 ) : null}
               </div>
 
-              <div className="space-y-6 max-md:space-y-3">
-                <div>
+              <div className="flex min-w-0 flex-col gap-6 max-md:gap-2.5">
+                <div className="max-md:order-1">
                   {product.brand ? (
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2 max-md:text-xs max-md:mb-1">
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2 max-md:text-[10px] max-md:mb-0.5 max-md:leading-tight">
                       {product.brand}
                     </p>
                   ) : null}
-                  <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4 text-balance max-md:text-xl max-md:mb-2 max-md:leading-tight">
+                  <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4 text-balance max-md:mb-1.5 max-md:text-base max-md:leading-snug max-md:line-clamp-3">
                     {product.title}
                   </h1>
 
-                  <div className="flex items-center gap-3 mb-4 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:mb-2">
+                  <div className="flex items-center gap-3 mb-4 max-md:flex-wrap max-md:gap-x-1.5 max-md:gap-y-0.5 max-md:mb-1.5">
                     <div className="flex items-center gap-0.5 max-md:gap-0">
                       {[...Array(5)].map((_, i) => {
                         const filled = (product.rating ?? 4.6) >= i + 1
@@ -263,31 +263,31 @@ export default function ProductPage() {
                       })}
                     </div>
                     <span className="text-sm font-medium max-md:text-xs">{(product.rating ?? 4.6).toFixed(1)}</span>
-                    <span className="text-sm text-muted-foreground max-md:text-[11px]">
+                    <span className="text-sm text-muted-foreground max-md:text-[10px] max-md:truncate max-md:max-w-[min(100%,11rem)]">
                       ({(product.reviews ?? 120).toLocaleString()} reviews)
                     </span>
                   </div>
 
-                  <div className="flex items-baseline gap-3 mb-6 max-md:flex-wrap max-md:mb-3 max-md:gap-2">
-                    <span className="text-4xl font-bold tabular-nums max-md:text-2xl">${product.price.toFixed(2)}</span>
+                  <div className="flex items-baseline gap-3 mb-6 max-md:flex-wrap max-md:mb-1.5 max-md:gap-1.5">
+                    <span className="text-4xl font-bold tabular-nums max-md:text-xl">${product.price.toFixed(2)}</span>
                     {product.originalPrice ? (
                       <>
                         <span className="text-xl text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</span>
-                        <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                        <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-semibold max-md:px-2 max-md:py-0.5 max-md:text-[10px]">
                           Save ${(product.originalPrice - product.price).toFixed(2)}
                         </span>
                       </>
                     ) : null}
                   </div>
 
-                  <p className="text-muted-foreground leading-relaxed max-md:text-sm max-md:leading-snug max-md:line-clamp-4">
+                  <p className="text-muted-foreground leading-relaxed max-md:text-xs max-md:leading-snug max-md:line-clamp-2">
                     {product.description}
                   </p>
                 </div>
 
                 {product.colors?.length ? (
-                  <div>
-                    <label className="block text-sm font-medium mb-3 max-md:mb-2 max-md:text-xs">
+                  <div className="max-md:order-3">
+                    <label className="block text-sm font-medium mb-3 max-md:mb-1.5 max-md:text-xs">
                       Color: <span className="text-muted-foreground">{selectedColor}</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -312,8 +312,8 @@ export default function ProductPage() {
                 ) : null}
 
                 {product.sizes?.length ? (
-                  <div>
-                    <label className="block text-sm font-medium mb-3 max-md:mb-2 max-md:text-xs">
+                  <div className="max-md:order-4">
+                    <label className="block text-sm font-medium mb-3 max-md:mb-1.5 max-md:text-xs">
                       Size: <span className="text-muted-foreground">{selectedSize}</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -333,8 +333,8 @@ export default function ProductPage() {
                   </div>
                 ) : null}
 
-                <div>
-                  <label className="block text-sm font-medium mb-3 max-md:mb-2 max-md:text-xs">Quantity</label>
+                <div className="max-md:order-5">
+                  <label className="block text-sm font-medium mb-3 max-md:mb-1.5 max-md:text-xs">Quantity</label>
                   <div className="flex items-center gap-4 max-md:gap-2">
                     <div className="flex items-center border border-border rounded-lg">
                       <button
@@ -362,14 +362,14 @@ export default function ProductPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 max-md:gap-2">
-                  <Button className="flex-1 gap-2 max-md:min-h-10 max-md:text-sm" disabled={adding} onClick={addToCart}>
+                <div className="flex max-md:order-2 max-md:flex-row max-md:flex-wrap flex-col gap-3 max-md:gap-2 sm:flex-row sm:flex-wrap">
+                  <Button className="flex-1 gap-2 max-md:min-h-9 max-md:basis-full max-md:text-xs" disabled={adding} onClick={addToCart}>
                     <ShoppingBag className="h-5 w-5 max-md:h-4 max-md:w-4" />
                     {adding ? 'Adding…' : 'Add to Cart'}
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 max-md:min-h-10 max-md:text-sm"
+                    className="min-w-0 flex-1 gap-2 max-md:min-h-9 max-md:flex-1 max-md:text-xs"
                     onClick={() => {
                       if (!product) return
                       const was = wishlist.has(product._id)
@@ -388,15 +388,17 @@ export default function ProductPage() {
                   </Button>
                   <Button
                     type="button"
-                    className="gap-2 bg-transparent text-foreground hover:bg-secondary border border-border max-md:min-h-10 max-md:bg-white max-md:text-black max-md:border-white max-md:hover:bg-zinc-100 max-md:hover:text-black"
+                    variant="outline"
+                    className="gap-1.5 bg-transparent text-foreground hover:bg-secondary border border-border max-md:min-h-9 max-md:shrink-0 max-md:!border-white max-md:!bg-white max-md:!text-black max-md:hover:!bg-zinc-200 max-md:hover:!text-black"
                     aria-label="Copy link to share"
                     onClick={() => void copyShareLink()}
                   >
-                    <Share2 className="h-5 w-5 max-md:h-4 max-md:w-4" />
+                    <Share2 className="h-5 w-5 max-md:h-3.5 max-md:w-3.5" />
+                    <span className="hidden max-md:inline text-xs font-medium">Share</span>
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border max-md:gap-2 max-md:pt-4">
+                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border max-md:order-6 max-md:gap-1.5 max-md:pt-3">
                   <div className="text-center">
                     <Truck className="h-6 w-6 mx-auto mb-2 text-accent max-md:h-5 max-md:w-5 max-md:mb-1" />
                     <p className="text-xs font-medium max-md:text-[10px]">Free Shipping</p>
@@ -415,7 +417,7 @@ export default function ProductPage() {
                 </div>
 
                 {product.features?.length ? (
-                  <div className="pt-6 border-t border-border max-md:pt-4">
+                  <div className="pt-6 border-t border-border max-md:order-7 max-md:pt-3">
                     <h3 className="text-lg font-semibold mb-3 max-md:text-base max-md:mb-2">Features</h3>
                     <ul className="space-y-3">
                       {product.features.map((f) => (
