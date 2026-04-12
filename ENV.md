@@ -31,20 +31,23 @@
 
 ## Client (Vercel — `VITE_` 만 빌드에 포함)
 
-### Vercel 대시보드에서 꼭 확인 (404 나올 때)
+### Vercel 대시보드에서 꼭 확인 (Featured 비거나 404 나올 때)
 
 1. **Root Directory** → 반드시 **`client`** (레포 루트에 Heroku용 `package.json`이 있어서, 루트로 두면 Vite가 아니라 잘못 빌드되거나 404가 납니다.)
 2. **Framework Preset** → **Vite** (또는 Auto가 `client` 안에서 Vite를 잡도록)
-3. **`client/vercel.json`** 안의 `YOUR-HEROKU-APP` 를 본인 Heroku 앱 호스트로 바꾼 뒤 Git에 커밋·푸시 (또는 Vercel에서만 수정 불가하면 로컬에서 바꿔 푸시)
+3. **`VITE_API_ORIGIN`** → Heroku 앱 루트 URL, 예: `https://your-app.herokuapp.com` (**끝에 `/` 없이**). 빌드 시 API 요청이 이 주소로 붙습니다. 로컬에서는 비워 두면 Vite 프록시가 `/api`를 개발 서버로 넘깁니다.
 
 ### 환경 변수
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
+| `VITE_API_ORIGIN` | ✅ (프로덕션) | Heroku 앱 origin, 예 `https://xxx.herokuapp.com` (슬래시 없음) |
 | `VITE_PORTONE_STORE_ID` | 결제 UI 시 | 포트원 스토어 ID |
 | `VITE_PORTONE_CHANNEL_KEY` | 결제 UI 시 | 포트원 채널 키 |
 
-API는 브라우저가 **`/api/...`** 로 요청합니다. **`client/vercel.json`** 의 첫 번째 `rewrite`가 Heroku로 넘깁니다. 두 번째 줄은 **새로고침·직접 URL 진입** 시 SPA용으로 `index.html`로 보냅니다.
+`client/vercel.json` 은 **SPA 새로고침**용으로만 `index.html`로 보냅니다. API는 **`VITE_API_ORIGIN`** 으로 직접 Heroku에 요청합니다 (Heroku의 `CLIENT_ORIGIN` 에 Vercel URL이 있어야 CORS 통과).
+
+**Heroku `CLIENT_ORIGIN`** 은 `https://shoppingmalldemojiuk.vercel.app` 처럼 **슬래시 없이** 두는 것이 맞습니다. 브라우저가 보내는 `Origin` 헤더에 `/` 가 붙지 않기 때문에, 끝에 `/` 를 넣으면 CORS 불일치로 막힐 수 있습니다.
 
 ---
 

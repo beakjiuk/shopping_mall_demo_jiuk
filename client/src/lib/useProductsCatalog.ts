@@ -1,4 +1,5 @@
 import useSWR from 'swr'
+import { resolveApiUrl } from './api'
 import type { Product } from './types'
 
 const swrOpts = {
@@ -9,7 +10,7 @@ const swrOpts = {
 }
 
 async function getOkJson<T extends { ok?: boolean }>(url: string): Promise<T> {
-  const r = await fetch(url)
+  const r = await fetch(resolveApiUrl(url))
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
   const j = (await r.json()) as T
   if (!j.ok) throw new Error((j as { error?: string }).error || 'FAILED')
