@@ -14,7 +14,7 @@ export default function ProductGrid() {
   const homeItems = useMemo(() => pickHomeFeaturedProducts(items), [items])
 
   return (
-    <section className="pt-2 pb-16 lg:pt-3 lg:pb-24 max-md:pb-12">
+    <section className="pt-2 pb-16 lg:pt-3 lg:pb-24 max-md:pt-0 max-md:pb-10">
       <div className="container mx-auto px-4">
         <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-x-3 gap-y-2 max-md:mb-4 lg:mb-10 lg:flex-nowrap lg:items-end lg:gap-6">
           <div className="min-w-0 flex-1">

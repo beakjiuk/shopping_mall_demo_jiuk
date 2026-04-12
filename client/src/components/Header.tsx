@@ -167,8 +167,8 @@ export default function Header() {
       ) : null}
 
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-3 h-16 lg:h-20 min-w-0 max-md:gap-1.5 max-md:h-14">
-          <div className="flex items-center gap-2 shrink-0 max-md:gap-1">
+        <div className="flex items-center gap-3 h-16 lg:h-20 min-w-0 max-md:gap-1.5 max-md:h-14 max-md:justify-between">
+          <div className="flex items-center gap-2 shrink-0 max-md:gap-1 min-w-0">
             <button
               type="button"
               className="lg:hidden inline-flex h-11 w-11 shrink-0 items-center justify-center -ml-1 rounded-lg hover:bg-secondary active:bg-secondary/80"

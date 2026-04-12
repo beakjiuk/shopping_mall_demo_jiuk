@@ -80,7 +80,7 @@ export default function HeroSection() {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
 
   return (
-    <section className="relative min-h-[44vh] h-[min(52vh,520px)] overflow-hidden bg-zinc-950 md:h-[calc(70vh*3/7)] md:min-h-0 lg:h-[calc(85vh*3/7)]">
+    <section className="relative overflow-hidden bg-zinc-950 max-md:h-[min(30svh,220px)] max-md:min-h-[140px] max-md:max-h-[min(34svh,260px)] md:h-[calc(70vh*3/7)] md:min-h-0 lg:h-[calc(85vh*3/7)]">
       {slides.map((slide, index) => (
         <div
           key={index}
@@ -90,27 +90,27 @@ export default function HeroSection() {
         >
           <HeroBackground src={slide.image} fallbacks={slide.fallbacks} />
 
-          <div className="relative z-10 h-full container mx-auto px-4 flex items-center max-md:pb-14 md:pb-0">
-            <div className="max-w-2xl max-md:py-2 md:py-0">
-              <p className="text-accent font-semibold tracking-widest uppercase mb-1 text-xs drop-shadow-sm max-md:text-[11px] max-md:mb-1.5">
+          <div className="relative z-10 h-full container mx-auto px-4 flex items-center max-md:pb-9 md:pb-0">
+            <div className="max-w-2xl max-md:py-1 md:py-0">
+              <p className="text-accent font-semibold tracking-widest uppercase mb-1 text-xs drop-shadow-sm max-md:text-[10px] max-md:mb-0.5 max-md:tracking-wide">
                 {slide.subtitle}
               </p>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 text-balance text-foreground drop-shadow-md max-md:text-[1.35rem] max-md:leading-snug">
+              <h1 className="font-bold tracking-tight mb-2 text-balance text-foreground drop-shadow-md max-md:text-lg max-md:leading-tight max-md:mb-1 md:text-3xl lg:text-4xl">
                 {slide.title}
               </h1>
-              <p className="text-sm lg:text-base text-zinc-300 mb-3 max-w-lg drop-shadow line-clamp-3 md:line-clamp-2 max-md:mb-4">
+              <p className="text-zinc-300 mb-3 max-w-lg drop-shadow max-md:mb-2 max-md:text-[11px] max-md:leading-snug max-md:line-clamp-2 md:text-sm md:line-clamp-2 lg:text-base lg:line-clamp-3">
                 {slide.description}
               </p>
               <Link
                 to={slide.to ?? '/products'}
-                className="relative z-10 inline-block max-md:block max-md:w-full max-md:max-w-xs"
+                className="relative z-10 inline-block max-md:inline-block max-md:w-auto"
               >
                 <Button
                   size="sm"
-                  className="group shadow-lg shadow-black/40 max-md:min-h-12 max-md:w-full max-md:text-sm"
+                  className="group shadow-lg shadow-black/40 max-md:h-8 max-md:min-h-0 max-md:px-3 max-md:text-xs max-md:rounded-md"
                 >
                   {slide.cta}
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform max-md:ml-1 max-md:h-3 max-md:w-3" />
                 </Button>
               </Link>
             </div>
@@ -118,14 +118,14 @@ export default function HeroSection() {
         </div>
       ))}
 
-      <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 flex items-center gap-2 px-2 max-md:pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 flex items-center gap-1.5 px-2 max-md:pb-[env(safe-area-inset-bottom,0px)] md:bottom-3 md:gap-2">
         <button
           type="button"
           onClick={prevSlide}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-background/30 hover:bg-background/50 backdrop-blur-md border border-white/10 text-foreground transition-colors active:scale-95 md:h-auto md:w-auto md:p-1.5"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/30 hover:bg-background/50 backdrop-blur-md border border-white/10 text-foreground transition-colors active:scale-95 md:h-10 md:w-10 md:p-1.5"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
+          <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
         </button>
         <div className="flex gap-2">
           {slides.map((_, index) => (
@@ -143,10 +143,10 @@ export default function HeroSection() {
         <button
           type="button"
           onClick={nextSlide}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-background/30 hover:bg-background/50 backdrop-blur-md border border-white/10 text-foreground transition-colors active:scale-95 md:h-auto md:w-auto md:p-1.5"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/30 hover:bg-background/50 backdrop-blur-md border border-white/10 text-foreground transition-colors active:scale-95 md:h-10 md:w-10 md:p-1.5"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-5 w-5 md:h-4 md:w-4" />
+          <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
         </button>
       </div>
     </section>
