@@ -74,6 +74,7 @@ export default function InquiriesPage() {
   const [busy, setBusy] = useState(false)
 
   const [subject, setSubject] = useState('')
+  const [orderNumber, setOrderNumber] = useState('')
   const [body, setBody] = useState('')
 
   const viewingRef = useRef(viewing)
@@ -105,6 +106,7 @@ export default function InquiriesPage() {
   function openCompose() {
     setViewing(null)
     setSubject('')
+    setOrderNumber('')
     setBody('')
     setComposeOpen(true)
   }
@@ -117,11 +119,12 @@ export default function InquiriesPage() {
       const res = await apiFetch<{ inquiry: Inquiry }>('/api/inquiries', {
         method: 'POST',
         auth: true,
-        body: { subject: subject.trim(), body: body.trim() },
+        body: { subject: subject.trim(), orderNumber: orderNumber.trim(), body: body.trim() },
       })
       if (!res.ok) throw new Error(res.error)
       setComposeOpen(false)
       setSubject('')
+      setOrderNumber('')
       setBody('')
       setViewing(res.inquiry)
       await load()
@@ -190,6 +193,9 @@ export default function InquiriesPage() {
                       className="w-full text-left rounded-xl border border-border/70 bg-background px-4 py-3 transition-colors hover:bg-secondary/30 hover:border-border"
                     >
                       <p className="text-sm font-semibold line-clamp-1">{t.subject}</p>
+                      {t.orderNumber?.trim() ? (
+                        <p className="mt-1 text-xs font-mono text-muted-foreground">Order: {t.orderNumber.trim()}</p>
+                      ) : null}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {t.status === 'open' && '접수'}
                         {t.status === 'answered' && '답변 완료'}
@@ -223,6 +229,21 @@ export default function InquiriesPage() {
                   autoFocus
                 />
               </div>
+                <div>
+                  <label htmlFor="inq-order" className="block text-sm font-medium mb-2">
+                    주문번호 (선택)
+                  </label>
+                  <Input
+                    id="inq-order"
+                    value={orderNumber}
+                    onChange={(e) => setOrderNumber(e.target.value)}
+                    className="h-11 bg-background font-mono"
+                    placeholder="예: ORD-1A2B3C4D"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    주문 완료/주문 목록에서 보이는 <span className="font-mono">ORD-XXXXXXXX</span> 를 붙여넣으면 상담이 더 빨라집니다.
+                  </p>
+                </div>
               <div>
                 <label htmlFor="inq-body" className="block text-sm font-medium mb-2">
                   내용
@@ -256,6 +277,12 @@ export default function InquiriesPage() {
               {viewing.status === 'answered' && '답변이 등록되었습니다.'}
               {viewing.status === 'closed' && '문의가 종료되었습니다.'}
             </p>
+            {viewing.orderNumber?.trim() ? (
+              <div className="rounded-lg border border-border bg-secondary/30 px-4 py-3 mb-4">
+                <p className="text-xs text-muted-foreground">Order</p>
+                <p className="font-mono text-sm font-semibold">{viewing.orderNumber.trim()}</p>
+              </div>
+            ) : null}
             <div className="space-y-3">
               {viewing.messages.map((m, idx) => (
                 <div

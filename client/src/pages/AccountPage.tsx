@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageCircle, Package, User as UserIcon } from 'lucide-react'
+import { MapPin, MessageCircle, Package, User as UserIcon } from 'lucide-react'
 import StorefrontLayout from '../components/StorefrontLayout'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -61,6 +61,13 @@ export default function AccountPage() {
             >
               <MessageCircle className="h-4 w-4" />
               Inquiries
+            </Link>
+            <Link
+              to="/account/addresses"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent/40 transition-colors"
+            >
+              <MapPin className="h-4 w-4" />
+              Addresses
             </Link>
             <button
               type="button"

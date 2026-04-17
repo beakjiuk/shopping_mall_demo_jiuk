@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { Cart } from "../models/Cart.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
+import { Address } from "../models/Address.js";
 import { getPortOnePayment } from "../utils/portone.js";
 
 const router = Router();
@@ -122,12 +123,16 @@ router.post("/", requireAuth, async (req, res, next) => {
   try {
     const body = z
       .object({
-        shippingMethod: z.enum(["standard", "express"]).optional().default("standard")
+        shippingMethod: z.enum(["standard", "express"]).optional().default("standard"),
+        addressId: z.string().min(1)
       })
       .parse(req.body || {});
 
     const cart = await Cart.findOne({ userId: req.user._id });
     if (!cart || cart.items.length === 0) return res.status(400).json({ ok: false, error: "CART_EMPTY" });
+
+    const address = await Address.findOne({ _id: body.addressId, userId: req.user._id }).lean();
+    if (!address) return res.status(400).json({ ok: false, error: "SHIPPING_ADDRESS_REQUIRED" });
 
     const productIds = cart.items.map((i) => i.productId);
     const products = await Product.find({ _id: { $in: productIds } }).lean();
@@ -164,10 +169,52 @@ router.post("/", requireAuth, async (req, res, next) => {
       status: "created",
       payAmountKrw,
       portoneMerchantUid,
-      shippingMethod: body.shippingMethod
+      shippingMethod: body.shippingMethod,
+      shippingAddressId: address._id,
+      shippingAddress: {
+        label: address.label || "",
+        recipientName: address.recipientName || "",
+        phone: address.phone || "",
+        address1: address.address1 || "",
+        address2: address.address2 || "",
+        city: address.city || "",
+        stateRegion: address.stateRegion || "",
+        zip: address.zip || ""
+      }
     });
 
     /** 장바구니는 포트원 결제 검증 성공 후 `POST .../portone/confirm` 에서 비움 */
+
+    res.json({ ok: true, order });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Resume checkout: set shipping address on an existing created order (legacy orders may be missing it). */
+router.post("/:id/address", requireAuth, async (req, res, next) => {
+  try {
+    const body = z.object({ addressId: z.string().min(1) }).parse(req.body || {});
+
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!order) return res.status(404).json({ ok: false, error: "NOT_FOUND" });
+    if (order.status !== "created") return res.status(400).json({ ok: false, error: "ORDER_NOT_PAYABLE" });
+
+    const address = await Address.findOne({ _id: body.addressId, userId: req.user._id }).lean();
+    if (!address) return res.status(400).json({ ok: false, error: "SHIPPING_ADDRESS_REQUIRED" });
+
+    order.shippingAddressId = address._id;
+    order.shippingAddress = {
+      label: address.label || "",
+      recipientName: address.recipientName || "",
+      phone: address.phone || "",
+      address1: address.address1 || "",
+      address2: address.address2 || "",
+      city: address.city || "",
+      stateRegion: address.stateRegion || "",
+      zip: address.zip || ""
+    };
+    await order.save();
 
     res.json({ ok: true, order });
   } catch (e) {

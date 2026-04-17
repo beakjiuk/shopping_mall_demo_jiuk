@@ -5,7 +5,7 @@ import StorefrontLayout from '../components/StorefrontLayout'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import { apiFetch } from '../lib/api'
-import type { CartItem, Order } from '../lib/types'
+import type { Address, CartItem, Order } from '../lib/types'
 import { useToast } from '../components/ToastHost'
 import SafeProductImage from '../components/SafeProductImage'
 import { getPortOneChannelKey, getPortOneStoreId, requestPortOneCardPayment } from '../lib/portone'
@@ -34,11 +34,17 @@ export default function CheckoutPage() {
   const [contactEmail, setContactEmail] = useState(user?.email ?? '')
   const [firstName, setFirstName] = useState(() => (user?.name ? user.name.split(' ')[0] : ''))
   const [lastName, setLastName] = useState(() => (user?.name ? user.name.split(' ').slice(1).join(' ') : ''))
-  const [address1, setAddress1] = useState('')
-  const [city, setCity] = useState('')
-  const [stateRegion, setStateRegion] = useState('')
-  const [zip, setZip] = useState('')
-  const [phone, setPhone] = useState('')
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [addressesLoading, setAddressesLoading] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('')
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [newLabel, setNewLabel] = useState('')
+  const [newAddress1, setNewAddress1] = useState('')
+  const [newAddress2, setNewAddress2] = useState('')
+  const [newCity, setNewCity] = useState('')
+  const [newStateRegion, setNewStateRegion] = useState('')
+  const [newZip, setNewZip] = useState('')
+  const [newPhone, setNewPhone] = useState('')
 
   const subtotal = useMemo(() => {
     if (resumeOrder) return resumeOrder.items.reduce((s, i) => s + i.price * i.quantity, 0)
@@ -65,6 +71,69 @@ export default function CheckoutPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const loadAddresses = useCallback(async () => {
+    if (!user) return
+    setAddressesLoading(true)
+    try {
+      const res = await apiFetch<{ addresses: Address[] }>('/api/addresses', { auth: true })
+      if (!res.ok) {
+        toast({ title: 'Could not load addresses', description: res.error })
+        return
+      }
+      setAddresses(res.addresses)
+      const preferred =
+        res.addresses.find((a) => a.isDefault) ||
+        (resumeOrder?.shippingAddressId ? res.addresses.find((a) => a._id === resumeOrder.shippingAddressId) : null) ||
+        res.addresses[0] ||
+        null
+      setSelectedAddressId((prev) => prev || preferred?._id || '')
+      setShowNewAddressForm(res.addresses.length === 0)
+    } finally {
+      setAddressesLoading(false)
+    }
+  }, [toast, user, resumeOrder?.shippingAddressId])
+
+  useEffect(() => {
+    void loadAddresses()
+  }, [loadAddresses])
+
+  const selectedAddress = useMemo(
+    () => addresses.find((a) => a._id === selectedAddressId) || null,
+    [addresses, selectedAddressId],
+  )
+
+  async function saveNewAddress() {
+    if (!user) return
+    const recipientName = `${firstName} ${lastName}`.trim() || user.name
+    const body = {
+      label: newLabel.trim(),
+      recipientName,
+      phone: newPhone.trim(),
+      address1: newAddress1.trim(),
+      address2: newAddress2.trim(),
+      city: newCity.trim(),
+      stateRegion: newStateRegion.trim(),
+      zip: newZip.trim(),
+      isDefault: addresses.length === 0,
+    }
+    const res = await apiFetch<{ address: Address }>('/api/addresses', { method: 'POST', auth: true, body })
+    if (!res.ok) {
+      toast({ title: 'Could not save address', description: res.error })
+      return
+    }
+    toast({ title: 'Saved', description: '배송지가 저장되었습니다.' })
+    setNewLabel('')
+    setNewAddress1('')
+    setNewAddress2('')
+    setNewCity('')
+    setNewStateRegion('')
+    setNewZip('')
+    setNewPhone('')
+    setShowNewAddressForm(false)
+    await loadAddresses()
+    setSelectedAddressId(res.address._id)
+  }
 
   useEffect(() => {
     if (!resumeId) {
@@ -113,11 +182,24 @@ export default function CheckoutPage() {
         if (!latest.ok) throw new Error(latest.error)
         if (latest.order.status !== 'created') throw new Error('ORDER_NOT_PAYABLE')
         order = latest.order
+
+        // Legacy created orders may not have a shipping address yet.
+        if (!order.shippingAddressId) {
+          if (!selectedAddressId) throw new Error('SHIPPING_ADDRESS_REQUIRED')
+          const attachRes = await apiFetch<{ order: Order }>(`/api/orders/${encodeURIComponent(order._id)}/address`, {
+            method: 'POST',
+            auth: true,
+            body: { addressId: selectedAddressId },
+          })
+          if (!attachRes.ok) throw new Error(attachRes.error)
+          order = attachRes.order
+        }
       } else {
+        if (!selectedAddressId) throw new Error('SHIPPING_ADDRESS_REQUIRED')
         const createRes = await apiFetch<{ order: Order }>('/api/orders', {
           method: 'POST',
           auth: true,
-          body: { shippingMethod },
+          body: { shippingMethod, addressId: selectedAddressId },
         })
         if (!createRes.ok) throw new Error(createRes.error)
         order = createRes.order
@@ -129,10 +211,13 @@ export default function CheckoutPage() {
       }
 
       const buyer_name = `${firstName} ${lastName}`.trim() || user.name
-      const buyer_addr1 = address1.trim()
-      const buyer_addr2 = [city, stateRegion].map((s) => s.trim()).filter(Boolean).join(', ')
-      const buyer_postcode = zip.trim()
-      const buyer_tel = phone.trim()
+      const buyer_addr1 = (selectedAddress?.address1 || '').trim()
+      const buyer_addr2 = [selectedAddress?.address2 || '', selectedAddress?.city || '', selectedAddress?.stateRegion || '']
+        .map((s) => String(s).trim())
+        .filter(Boolean)
+        .join(', ')
+      const buyer_postcode = (selectedAddress?.zip || '').trim()
+      const buyer_tel = (selectedAddress?.phone || '').trim()
 
       const storeId = getPortOneStoreId()
       const channelKey = getPortOneChannelKey()
@@ -151,8 +236,10 @@ export default function CheckoutPage() {
               address: {
                 addressLine1: buyer_addr1,
                 addressLine2: buyer_addr2 || ' ',
-                ...(city.trim() ? { city: city.trim() } : {}),
-                ...(stateRegion.trim() ? { province: stateRegion.trim() } : {}),
+                ...(String(selectedAddress?.city || '').trim() ? { city: String(selectedAddress?.city || '').trim() } : {}),
+                ...(String(selectedAddress?.stateRegion || '').trim()
+                  ? { province: String(selectedAddress?.stateRegion || '').trim() }
+                  : {}),
               },
             }
           : {}),
@@ -191,7 +278,13 @@ export default function CheckoutPage() {
       toast({ title: '결제 완료', description: `주문번호 ${order._id}` })
       nav(`/checkout/success?orderId=${encodeURIComponent(order._id)}`)
     } catch (e) {
-      toast({ title: '주문 처리 실패', description: String(e) })
+      const msg = String(e)
+      if (msg.includes('SHIPPING_ADDRESS_REQUIRED')) {
+        toast({ title: '배송지 필요', description: '결제 전에 배송지를 저장하고 선택해주세요.' })
+        setCurrentStep(0)
+      } else {
+        toast({ title: '주문 처리 실패', description: msg })
+      }
     } finally {
       setBusy(false)
     }
@@ -199,6 +292,12 @@ export default function CheckoutPage() {
 
   async function onContinue(e: React.FormEvent) {
     e.preventDefault()
+    if (currentStep === 0) {
+      if (!selectedAddressId) {
+        toast({ title: '배송지 필요', description: '결제 전에 배송지를 선택하거나 새로 저장해주세요.' })
+        return
+      }
+    }
     if (currentStep < steps.length - 1) setCurrentStep((s) => s + 1)
     else await placeOrder()
   }
@@ -312,71 +411,120 @@ export default function CheckoutPage() {
                       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-2">First Name</label>
-                          <Input
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            className="max-md:min-h-11 max-md:text-base"
-                            required
-                          />
+                          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">Last Name</label>
-                          <Input
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            className="max-md:min-h-11 max-md:text-base"
-                            required
-                          />
+                          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Address</label>
-                        <Input
-                          value={address1}
-                          onChange={(e) => setAddress1(e.target.value)}
-                          className="max-md:min-h-11 max-md:text-base"
-                          required
-                        />
+
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-muted-foreground">
+                          결제 전 배송지를 <span className="text-foreground font-medium">저장</span>하고 선택해야 합니다.
+                        </p>
+                        <Button type="button" variant="outline" size="sm" disabled={addressesLoading} onClick={() => setShowNewAddressForm((v) => !v)}>
+                          {showNewAddressForm ? 'Hide' : 'Add new'}
+                        </Button>
                       </div>
-                      <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">City</label>
-                          <Input
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            className="max-md:min-h-11 max-md:text-base"
-                            required
-                          />
+
+                      {addressesLoading ? (
+                        <div className="text-sm text-muted-foreground">Loading saved addresses…</div>
+                      ) : addresses.length > 0 ? (
+                        <div className="space-y-3">
+                          {addresses.map((a) => {
+                            const checked = a._id === selectedAddressId
+                            return (
+                              <button
+                                key={a._id}
+                                type="button"
+                                onClick={() => setSelectedAddressId(a._id)}
+                                className={`w-full text-left rounded-lg border p-4 transition-colors ${
+                                  checked ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/40'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="min-w-0">
+                                    <p className="font-medium truncate">
+                                      {a.label?.trim() ? a.label : 'Saved address'}{' '}
+                                      {a.isDefault ? <span className="text-xs text-accent ml-2">Default</span> : null}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {a.recipientName} {a.phone ? `· ${a.phone}` : ''}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {a.address1}
+                                      {a.address2 ? `, ${a.address2}` : ''} · {a.city}, {a.stateRegion} {a.zip}
+                                    </p>
+                                  </div>
+                                  <span className="mt-1 w-4 h-4 rounded-full border border-border flex items-center justify-center shrink-0">
+                                    {checked ? <span className="w-2 h-2 rounded-full bg-accent" /> : null}
+                                  </span>
+                                </div>
+                              </button>
+                            )
+                          })}
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">State</label>
-                          <Input
-                            value={stateRegion}
-                            onChange={(e) => setStateRegion(e.target.value)}
-                            className="max-md:min-h-11 max-md:text-base"
-                            required
-                          />
+                      ) : (
+                        <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
+                          저장된 배송지가 없습니다. 아래에서 새 배송지를 저장해주세요.
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">ZIP</label>
-                          <Input
-                            value={zip}
-                            onChange={(e) => setZip(e.target.value)}
-                            className="max-md:min-h-11 max-md:text-base"
-                            required
-                          />
+                      )}
+
+                      {showNewAddressForm ? (
+                        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                          <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Label (optional)</label>
+                              <Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="max-md:min-h-11 max-md:text-base" placeholder="Home" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Phone</label>
+                              <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="max-md:min-h-11 max-md:text-base" inputMode="tel" required />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Address line 1</label>
+                            <Input value={newAddress1} onChange={(e) => setNewAddress1(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Address line 2 (optional)</label>
+                            <Input value={newAddress2} onChange={(e) => setNewAddress2(e.target.value)} className="max-md:min-h-11 max-md:text-base" />
+                          </div>
+                          <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">City</label>
+                              <Input value={newCity} onChange={(e) => setNewCity(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">State</label>
+                              <Input value={newStateRegion} onChange={(e) => setNewStateRegion(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">ZIP</label>
+                              <Input value={newZip} onChange={(e) => setNewZip(e.target.value)} className="max-md:min-h-11 max-md:text-base" required />
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            className="w-full"
+                            variant="secondary"
+                            disabled={
+                              busy ||
+                              !newPhone.trim() ||
+                              !newAddress1.trim() ||
+                              !newCity.trim() ||
+                              !newStateRegion.trim() ||
+                              !newZip.trim()
+                            }
+                            onClick={() => void saveNewAddress()}
+                          >
+                            Save address
+                          </Button>
                         </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Phone</label>
-                        <Input
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="max-md:min-h-11 max-md:text-base"
-                          inputMode="tel"
-                          required
-                        />
-                      </div>
+                      ) : null}
                     </div>
                   </div>
 

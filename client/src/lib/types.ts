@@ -36,6 +36,20 @@ export type Product = {
 
 export type CartItem = { productId: string; quantity: number; size?: string; product: Product | null };
 
+export type Address = {
+  _id: string;
+  label?: string;
+  recipientName: string;
+  phone?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  stateRegion: string;
+  zip: string;
+  isDefault?: boolean;
+  createdAt: string;
+};
+
 export type OrderItem = { productId: string; title: string; price: number; quantity: number; size?: string };
 export type Order = {
   _id: string;
@@ -45,6 +59,17 @@ export type Order = {
   portoneMerchantUid?: string;
   portoneImpUid?: string;
   shippingMethod?: 'standard' | 'express';
+  shippingAddressId?: string | null;
+  shippingAddress?: {
+    label?: string;
+    recipientName?: string;
+    phone?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    stateRegion?: string;
+    zip?: string;
+  } | null;
   status: 'created' | 'paid' | 'fulfilment' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   shipping?: {
     carrier?: string;
@@ -59,6 +84,7 @@ export type InquiryMessage = { role: 'user' | 'admin'; body: string; createdAt: 
 export type Inquiry = {
   _id: string;
   userId: string;
+  orderNumber?: string;
   subject: string;
   status: 'open' | 'answered' | 'closed';
   messages: InquiryMessage[];

@@ -12,6 +12,8 @@ const inquiryMessageSchema = new mongoose.Schema(
 const inquirySchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    /** Optional order reference a user can paste (e.g. ORD-XXXXXXXX). */
+    orderNumber: { type: String, default: "", trim: true, maxlength: 32 },
     subject: { type: String, required: true, trim: true, maxlength: 200 },
     status: { type: String, enum: ["open", "answered", "closed"], default: "open" },
     messages: { type: [inquiryMessageSchema], default: [] }

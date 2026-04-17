@@ -20,6 +20,7 @@ const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage'))
 const CheckoutPortOneRedirectPage = lazy(() => import('./pages/CheckoutPortOneRedirectPage'))
 const WishlistPage = lazy(() => import('./pages/WishlistPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
+const AddressBookPage = lazy(() => import('./pages/AddressBookPage'))
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
 const InquiriesPage = lazy(() => import('./pages/InquiriesPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
@@ -113,6 +114,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <AccountPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/account/addresses"
+              element={
+                <RequireAuth>
+                  <AddressBookPage />
                 </RequireAuth>
               }
             />

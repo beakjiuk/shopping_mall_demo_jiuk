@@ -33,6 +33,7 @@ router.post("/", async (req, res, next) => {
   try {
     const body = z
       .object({
+        orderNumber: z.string().trim().max(32).optional().default(""),
         subject: z.string().trim().min(1).max(200),
         body: z.string().trim().min(1).max(5000)
       })
@@ -40,6 +41,7 @@ router.post("/", async (req, res, next) => {
 
     const inquiry = await Inquiry.create({
       userId: req.user._id,
+      orderNumber: body.orderNumber,
       subject: body.subject,
       status: "open",
       messages: [{ role: "user", body: body.body }]

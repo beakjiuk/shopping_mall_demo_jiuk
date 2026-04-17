@@ -24,6 +24,11 @@ function ticketRef(id: string) {
   return `TCK-${id.slice(-8).toUpperCase()}`
 }
 
+function orderRef(orderNumber?: string) {
+  const v = (orderNumber || '').trim()
+  return v ? v : ''
+}
+
 export default function AdminInquiriesPage() {
   const [items, setItems] = useState<Inquiry[]>([])
   const [selected, setSelected] = useState<Inquiry | null>(null)
@@ -184,6 +189,9 @@ export default function AdminInquiriesPage() {
                     <div className="min-w-0">
                       <p className="font-mono text-xs text-muted-foreground">{ticketRef(t._id)}</p>
                       <p className="mt-1 text-sm font-semibold line-clamp-1">{t.subject}</p>
+                        {orderRef(t.orderNumber) ? (
+                          <p className="mt-1 text-xs font-mono text-muted-foreground">Order: {orderRef(t.orderNumber)}</p>
+                        ) : null}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(t.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                       </p>
@@ -209,6 +217,11 @@ export default function AdminInquiriesPage() {
                 <p className="text-xs text-muted-foreground font-mono">{ticketRef(selected._id)}</p>
                 <p className="text-sm font-semibold mt-1">{selected.subject}</p>
                 <p className="text-xs text-muted-foreground mt-1">User: {selected.userId.slice(-8).toUpperCase()}</p>
+                {orderRef(selected.orderNumber) ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Order: <span className="font-mono text-foreground/90">{orderRef(selected.orderNumber)}</span>
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap gap-2 mt-3">
                   <Button variant="outline" size="sm" disabled={busy} onClick={() => setStatus('open')}>
                     Mark open

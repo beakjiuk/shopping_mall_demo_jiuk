@@ -21,6 +21,20 @@ const shippingSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const shippingAddressSchema = new mongoose.Schema(
+  {
+    label: { type: String, default: "" },
+    recipientName: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    address1: { type: String, default: "" },
+    address2: { type: String, default: "" },
+    city: { type: String, default: "" },
+    stateRegion: { type: String, default: "" },
+    zip: { type: String, default: "" }
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -31,6 +45,8 @@ const orderSchema = new mongoose.Schema(
     portoneImpUid: { type: String, default: "" },
     /** Checkout에서 선택한 배송 — 재결제 시 금액 일치용 (기존 주문은 기본 standard) */
     shippingMethod: { type: String, enum: ["standard", "express"], default: "standard" },
+    shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address", default: null },
+    shippingAddress: { type: shippingAddressSchema, default: null },
     status: {
       type: String,
       enum: ["created", "paid", "fulfilment", "shipped", "delivered", "cancelled", "refunded"],
