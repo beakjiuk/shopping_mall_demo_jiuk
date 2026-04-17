@@ -6,6 +6,7 @@ import Button from '../components/ui/Button'
 import { apiFetch } from '../lib/api'
 import type { Order } from '../lib/types'
 import { useToast } from '../components/ToastHost'
+import SafeProductImage from '../components/SafeProductImage'
 
 function statusLabel(status: Order['status']) {
   switch (status) {
@@ -56,7 +57,7 @@ export default function OrdersPage() {
     setLoading(true)
     const res = await apiFetch<{ orders: Order[] }>('/api/orders', { auth: true })
     if (!res.ok) {
-      setError(res.error)
+      setError('error' in res ? res.error : 'UNKNOWN_ERROR')
       setOrders([])
     } else {
       setError(null)
@@ -75,7 +76,7 @@ export default function OrdersPage() {
     try {
       const res = await apiFetch<{ deleted?: boolean }>(`/api/orders/${orderId}/cancel`, { method: 'POST', auth: true })
       if (!res.ok) {
-        toast({ title: '삭제할 수 없습니다', description: res.error })
+        toast({ title: '삭제할 수 없습니다', description: 'error' in res ? res.error : 'UNKNOWN_ERROR' })
         return
       }
       toast({ title: '주문을 삭제했습니다' })
@@ -154,12 +155,37 @@ export default function OrdersPage() {
                 const preview = o.items.slice(0, 2).map((i) => i.title).join(' · ')
                 const more = o.items.length > 2 ? ` +${o.items.length - 2}` : ''
                 const unpaid = o.status === 'created'
+                const thumbs = o.items
+                  .map((it) => (it.imageUrl || '').trim())
+                  .filter(Boolean)
+                  .slice(0, 3)
                 return (
                   <article
                     key={o._id}
                     className="rounded-lg border border-border bg-card px-4 py-3 md:px-4 md:py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 flex items-start gap-3">
+                      <div className="shrink-0 pt-1">
+                        {thumbs.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {thumbs.map((src, idx) => (
+                              <div
+                                key={`${src}::${idx}`}
+                                className="h-11 w-11 rounded-xl overflow-hidden border border-border bg-secondary shadow-sm"
+                                style={{ zIndex: thumbs.length - idx }}
+                              >
+                                <SafeProductImage src={src} alt="Order item" className="h-full w-full object-cover" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="h-11 w-11 rounded-xl border border-border bg-secondary flex items-center justify-center">
+                            <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="font-mono text-xs font-semibold">{orderRef}</span>
                         <span
@@ -175,6 +201,7 @@ export default function OrdersPage() {
                         {preview}
                         {more}
                       </p>
+                      </div>
                     </div>
                     <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0 text-right">
                       <p className="text-base font-bold tabular-nums">${o.total.toFixed(2)}</p>

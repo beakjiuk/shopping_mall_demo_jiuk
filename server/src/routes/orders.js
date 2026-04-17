@@ -148,6 +148,7 @@ router.post("/", requireAuth, async (req, res, next) => {
       items.push({
         productId: p._id,
         title: sz ? `${p.title} (${sz})` : p.title,
+        imageUrl: (Array.isArray(p.images) && p.images[0]) ? String(p.images[0] || "").trim() : String(p.imageUrl || "").trim(),
         price: p.price,
         quantity: i.quantity,
         size: sz

@@ -50,7 +50,7 @@ export type Address = {
   createdAt: string;
 };
 
-export type OrderItem = { productId: string; title: string; price: number; quantity: number; size?: string };
+export type OrderItem = { productId: string; title: string; imageUrl?: string; price: number; quantity: number; size?: string };
 export type Order = {
   _id: string;
   items: OrderItem[];

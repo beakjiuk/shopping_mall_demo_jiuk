@@ -10,6 +10,7 @@ import { useToast } from '../components/ToastHost'
 import SafeProductImage from '../components/SafeProductImage'
 import { getPortOneChannelKey, getPortOneStoreId, requestPortOneCardPayment } from '../lib/portone'
 import { useAuth } from '../context/AuthContext'
+import useWishlist from '../hooks/useWishlist'
 const steps = ['Shipping', 'Payment', 'Review'] as const
 
 function isLikelyMobileUserAgent(): boolean {
@@ -23,6 +24,7 @@ export default function CheckoutPage() {
   const resumeId = (searchParams.get('resume') || '').trim()
   const { toast } = useToast()
   const { user } = useAuth()
+  const wishlist = useWishlist()
   const [items, setItems] = useState<CartItem[]>([])
   const [resumeOrder, setResumeOrder] = useState<Order | null>(null)
   const [resumeLoading, setResumeLoading] = useState(!!resumeId)
@@ -273,6 +275,12 @@ export default function CheckoutPage() {
       })
       if (!confirmRes.ok) {
         throw new Error(confirmRes.error)
+      }
+
+      // After successful checkout, remove purchased items from wishlist (client-only storage).
+      const purchasedIds = new Set(order.items.map((i) => i.productId))
+      if (purchasedIds.size > 0 && wishlist.count > 0) {
+        wishlist.set(wishlist.ids.filter((id) => !purchasedIds.has(id)))
       }
 
       toast({ title: '결제 완료', description: `주문번호 ${order._id}` })

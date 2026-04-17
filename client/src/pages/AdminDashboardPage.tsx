@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { DollarSign, Package, ShoppingCart, TrendingUp } from 'lucide-react'
 import { apiFetch } from '../lib/api'
+import SafeProductImage from '../components/SafeProductImage'
 
 type Kpi = { ordersCount: number; revenue: number; itemsSold: number }
-type TopProduct = { _id: string; title: string; quantity: number; revenue: number }
+type TopProduct = { _id: string; title: string; quantity: number; revenue: number; imageUrl?: string; brand?: string }
 
 function money(n: number) {
   return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' })
@@ -90,28 +91,39 @@ export default function AdminDashboardPage() {
         ) : top.length === 0 ? (
           <p className="text-sm text-muted-foreground">No paid orders yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="py-2 pr-4 font-medium">Product</th>
-                  <th className="py-2 pr-4 font-medium">Qty</th>
-                  <th className="py-2 pr-4 font-medium">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {top.map((p) => (
-                  <tr key={p._id} className="border-b border-border/60 last:border-b-0">
-                    <td className="py-3 pr-4">
-                      <p className="font-medium text-foreground/90 line-clamp-1">{p.title}</p>
-                      <p className="text-xs text-muted-foreground font-mono">#{p._id.slice(-8).toUpperCase()}</p>
-                    </td>
-                    <td className="py-3 pr-4 tabular-nums">{p.quantity.toLocaleString()}</td>
-                    <td className="py-3 pr-4 tabular-nums">{money(p.revenue)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {top.map((p, idx) => (
+              <div
+                key={p._id}
+                className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-background px-4 py-3"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-12 w-12 rounded-xl overflow-hidden border border-border bg-secondary shrink-0">
+                    {p.imageUrl ? (
+                      <SafeProductImage src={p.imageUrl} alt={p.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold line-clamp-1">
+                      <span className="text-muted-foreground mr-2">#{idx + 1}</span>
+                      {p.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(p.brand?.trim() ? `${p.brand.trim()} · ` : '') + `#${p._id.slice(-8).toUpperCase()}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="text-xs text-muted-foreground">Qty</p>
+                  <p className="text-sm font-semibold tabular-nums">{p.quantity.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Revenue</p>
+                  <p className="text-sm font-semibold tabular-nums">{money(p.revenue)}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

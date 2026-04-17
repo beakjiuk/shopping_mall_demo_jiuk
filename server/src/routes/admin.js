@@ -212,6 +212,27 @@ router.get("/stats", async (req, res, next) => {
             revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } }
           }
         },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            imageUrl: {
+              $ifNull: [
+                { $arrayElemAt: ["$product.images", 0] },
+                { $ifNull: ["$product.imageUrl", ""] }
+              ]
+            },
+            brand: { $ifNull: ["$product.brand", ""] }
+          }
+        },
+        { $project: { product: 0 } },
         { $sort: { revenue: -1 } },
         { $limit: 8 }
       ])

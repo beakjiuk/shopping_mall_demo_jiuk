@@ -5,6 +5,7 @@ import Button from '../components/ui/Button'
 import { apiFetch } from '../lib/api'
 import type { Order } from '../lib/types'
 import { useToast } from '../components/ToastHost'
+import useWishlist from '../hooks/useWishlist'
 
 export default function CheckoutPortOneRedirectPage() {
   const nav = useNavigate()
@@ -12,6 +13,7 @@ export default function CheckoutPortOneRedirectPage() {
   const { toast } = useToast()
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const wishlist = useWishlist()
 
   useEffect(() => {
     const orderId = sp.get('orderId') || ''
@@ -39,6 +41,13 @@ export default function CheckoutPortOneRedirectPage() {
         })
         if (cancelled) return
         if (!confirmRes.ok) throw new Error(confirmRes.error)
+
+        // Remove purchased items from wishlist.
+        const purchasedIds = new Set(confirmRes.order.items.map((i) => i.productId))
+        if (purchasedIds.size > 0 && wishlist.count > 0) {
+          wishlist.set(wishlist.ids.filter((id) => !purchasedIds.has(id)))
+        }
+
         toast({ title: '결제 완료', description: `주문번호 ${orderId}` })
         nav(`/checkout/success?orderId=${encodeURIComponent(orderId)}`, { replace: true })
       } catch (e) {
@@ -52,7 +61,7 @@ export default function CheckoutPortOneRedirectPage() {
     return () => {
       cancelled = true
     }
-  }, [nav, sp, toast])
+  }, [nav, sp, toast, wishlist])
 
   return (
     <StorefrontLayout footerContext="checkout">
