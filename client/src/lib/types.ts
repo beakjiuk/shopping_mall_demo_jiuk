@@ -77,6 +77,14 @@ export type Order = {
     memo?: string;
     updatedAt?: string | null;
   };
+  cancelRequest?: {
+    status?: 'none' | 'requested' | 'approved' | 'rejected';
+    reason?: string;
+    requestedAt?: string | null;
+    decidedAt?: string | null;
+    decidedBy?: string | null;
+    decisionNote?: string;
+  };
   createdAt: string;
 };
 

@@ -223,5 +223,46 @@ router.post("/:id/address", requireAuth, async (req, res, next) => {
   }
 });
 
+/** Request cancellation for a paid order. Admin must approve before it becomes cancelled. */
+router.post("/:id/cancel-request", requireAuth, async (req, res, next) => {
+  try {
+    const body = z
+      .object({
+        reason: z.string().trim().max(500).optional().default("")
+      })
+      .parse(req.body || {});
+
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!order) return res.status(404).json({ ok: false, error: "NOT_FOUND" });
+
+    if (order.status === "shipped" || order.status === "delivered") {
+      return res.status(400).json({ ok: false, error: "ORDER_NOT_CANCELLABLE" });
+    }
+    if (order.status === "cancelled" || order.status === "refunded") {
+      return res.status(400).json({ ok: false, error: "ORDER_NOT_CANCELLABLE" });
+    }
+    if (order.status === "created") {
+      return res.status(400).json({ ok: false, error: "USE_DRAFT_DELETE" });
+    }
+    if (order.cancelRequest?.status === "requested") {
+      return res.status(400).json({ ok: false, error: "CANCEL_ALREADY_REQUESTED" });
+    }
+
+    order.cancelRequest = {
+      status: "requested",
+      reason: body.reason,
+      requestedAt: new Date(),
+      decidedAt: null,
+      decidedBy: null,
+      decisionNote: ""
+    };
+    await order.save();
+
+    res.json({ ok: true, order });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;
 

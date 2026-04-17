@@ -36,6 +36,18 @@ const shippingAddressSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const cancelRequestSchema = new mongoose.Schema(
+  {
+    status: { type: String, enum: ["none", "requested", "approved", "rejected"], default: "none" },
+    reason: { type: String, default: "" },
+    requestedAt: { type: Date, default: null },
+    decidedAt: { type: Date, default: null },
+    decidedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    decisionNote: { type: String, default: "" }
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -53,7 +65,8 @@ const orderSchema = new mongoose.Schema(
       enum: ["created", "paid", "fulfilment", "shipped", "delivered", "cancelled", "refunded"],
       default: "created"
     },
-    shipping: { type: shippingSchema, default: () => ({}) }
+    shipping: { type: shippingSchema, default: () => ({}) },
+    cancelRequest: { type: cancelRequestSchema, default: () => ({}) }
   },
   { timestamps: true }
 );

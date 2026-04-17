@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, CreditCard, Package, ShoppingBag, Sparkles, XCircle } from 'lucide-react'
+import { ArrowRight, Copy, CreditCard, Package, ShoppingBag, Sparkles, XCircle } from 'lucide-react'
 import StorefrontLayout from '../components/StorefrontLayout'
 import Button from '../components/ui/Button'
 import { apiFetch } from '../lib/api'
@@ -52,6 +52,7 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [requestingId, setRequestingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -83,6 +84,35 @@ export default function OrdersPage() {
       await load()
     } finally {
       setCancellingId(null)
+    }
+  }
+
+  async function requestCancel(orderId: string) {
+    const reason = (window.prompt('취소 사유를 입력해 주세요 (선택)', '') || '').trim()
+    setRequestingId(orderId)
+    try {
+      const res = await apiFetch<{ order: Order }>(`/api/orders/${orderId}/cancel-request`, {
+        method: 'POST',
+        auth: true,
+        body: { reason },
+      })
+      if (!res.ok) {
+        toast({ title: '취소 요청 실패', description: 'error' in res ? res.error : 'UNKNOWN_ERROR' })
+        return
+      }
+      toast({ title: '취소 요청 완료', description: '관리자 승인 후 취소가 처리됩니다.' })
+      await load()
+    } finally {
+      setRequestingId(null)
+    }
+  }
+
+  async function copy(text: string, okTitle: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({ title: okTitle })
+    } catch {
+      toast({ title: '복사 실패', description: text })
     }
   }
 
@@ -155,6 +185,11 @@ export default function OrdersPage() {
                 const preview = o.items.slice(0, 2).map((i) => i.title).join(' · ')
                 const more = o.items.length > 2 ? ` +${o.items.length - 2}` : ''
                 const unpaid = o.status === 'created'
+                const canRequestCancel =
+                  (o.status === 'paid' || o.status === 'fulfilment') && (o.cancelRequest?.status || 'none') === 'none'
+                const cancelState = (o.cancelRequest?.status || 'none').trim()
+                const tracking = (o.shipping?.trackingNumber || '').trim()
+                const carrier = (o.shipping?.carrier || '').trim()
                 const thumbs = o.items
                   .map((it) => (it.imageUrl || '').trim())
                   .filter(Boolean)
@@ -193,6 +228,19 @@ export default function OrdersPage() {
                         >
                           {statusLabel(o.status)}
                         </span>
+                        {cancelState === 'requested' ? (
+                          <span className="inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25">
+                            취소 요청됨
+                          </span>
+                        ) : cancelState === 'rejected' ? (
+                          <span className="inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium bg-destructive/10 text-destructive border-destructive/25">
+                            취소 거절
+                          </span>
+                        ) : cancelState === 'approved' ? (
+                          <span className="inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium bg-secondary text-secondary-foreground border-border">
+                            취소 승인
+                          </span>
+                        ) : null}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {new Date(o.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
@@ -201,6 +249,23 @@ export default function OrdersPage() {
                         {preview}
                         {more}
                       </p>
+                      {tracking ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            배송: <span className="text-foreground/80">{carrier || 'Carrier'}</span> ·{' '}
+                            <span className="font-mono text-foreground/80">{tracking}</span>
+                          </span>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => void copy(tracking, '운송장번호 복사됨')}
+                            aria-label="Copy tracking number"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy
+                          </button>
+                        </div>
+                      ) : null}
                       </div>
                     </div>
                     <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0 text-right">
@@ -226,6 +291,17 @@ export default function OrdersPage() {
                             {cancellingId === o._id ? '삭제 중…' : '삭제'}
                           </Button>
                         </div>
+                      ) : canRequestCancel ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 text-xs"
+                          disabled={requestingId === o._id}
+                          onClick={() => void requestCancel(o._id)}
+                        >
+                          {requestingId === o._id ? '요청 중…' : '주문 취소 요청'}
+                        </Button>
                       ) : null}
                     </div>
                   </article>

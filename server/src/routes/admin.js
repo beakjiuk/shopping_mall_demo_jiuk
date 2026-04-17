@@ -303,6 +303,12 @@ router.patch("/orders/:id", async (req, res, next) => {
             trackingNumber: z.string().optional(),
             memo: z.string().optional()
           })
+          .optional(),
+        cancelDecision: z
+          .object({
+            action: z.enum(["approve", "reject"]),
+            note: z.string().trim().max(500).optional().default("")
+          })
           .optional()
       })
       .parse(req.body);
@@ -318,8 +324,33 @@ router.patch("/orders/:id", async (req, res, next) => {
       };
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ ok: false, error: "NOT_FOUND" });
+
+    if (Object.keys(update).length) {
+      Object.assign(order, update);
+    }
+
+    if (body.cancelDecision) {
+      if (order.cancelRequest?.status !== "requested") {
+        return res.status(400).json({ ok: false, error: "NO_CANCEL_REQUEST" });
+      }
+      if (body.cancelDecision.action === "approve") {
+        // Prevent cancelling after shipment has started.
+        if (order.status === "shipped" || order.status === "delivered") {
+          return res.status(400).json({ ok: false, error: "ORDER_NOT_CANCELLABLE" });
+        }
+        order.status = "cancelled";
+        order.cancelRequest.status = "approved";
+      } else {
+        order.cancelRequest.status = "rejected";
+      }
+      order.cancelRequest.decidedAt = new Date();
+      order.cancelRequest.decidedBy = req.user._id;
+      order.cancelRequest.decisionNote = body.cancelDecision.note || "";
+    }
+
+    await order.save();
     res.json({ ok: true, order });
   } catch (e) {
     next(e);

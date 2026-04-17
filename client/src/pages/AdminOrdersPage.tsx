@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ClipboardList, RefreshCw, Truck } from 'lucide-react'
+import { ClipboardList, RefreshCw, ShieldAlert, Truck } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import { apiFetch } from '../lib/api'
@@ -42,6 +42,7 @@ export default function AdminOrdersPage() {
   const [shipTracking, setShipTracking] = useState('')
   const [shipMemo, setShipMemo] = useState('')
   const [newStatus, setNewStatus] = useState<OrderStatus>('paid')
+  const [cancelNote, setCancelNote] = useState('')
 
   const query = useMemo(() => {
     const params = new URLSearchParams()
@@ -74,6 +75,7 @@ export default function AdminOrdersPage() {
     setShipCarrier(selected.shipping?.carrier || '')
     setShipTracking(selected.shipping?.trackingNumber || '')
     setShipMemo(selected.shipping?.memo || '')
+    setCancelNote('')
   }, [selected])
 
   async function patchSelected() {
@@ -87,6 +89,25 @@ export default function AdminOrdersPage() {
           status: newStatus,
           shipping: { carrier: shipCarrier, trackingNumber: shipTracking, memo: shipMemo },
         },
+      })
+      if (!res.ok) throw new Error(res.error)
+      setSelected(res.order)
+      setOrders((prev) => prev.map((o) => (o._id === res.order._id ? res.order : o)))
+    } catch (e) {
+      alert(String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function decideCancel(action: 'approve' | 'reject') {
+    if (!selected) return
+    setBusy(true)
+    try {
+      const res = await apiFetch<{ order: Order }>(`/api/admin/orders/${selected._id}`, {
+        method: 'PATCH',
+        auth: true,
+        body: { cancelDecision: { action, note: cancelNote.trim() } },
       })
       if (!res.ok) throw new Error(res.error)
       setSelected(res.order)
@@ -246,6 +267,32 @@ export default function AdminOrdersPage() {
               <Button onClick={patchSelected} disabled={busy} className="w-full h-11">
                 {busy ? 'Saving…' : 'Save changes'}
               </Button>
+
+              {selected.cancelRequest?.status === 'requested' ? (
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Cancellation requested</p>
+                  </div>
+                  {selected.cancelRequest.reason ? (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">Reason: {selected.cancelRequest.reason}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Reason: (not provided)</p>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Decision note (optional)</label>
+                    <Input value={cancelNote} onChange={(e) => setCancelNote(e.target.value)} className="h-11 bg-background" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" className="flex-1 h-11" disabled={busy} onClick={() => void decideCancel('reject')}>
+                      Reject
+                    </Button>
+                    <Button type="button" className="flex-1 h-11" disabled={busy} onClick={() => void decideCancel('approve')}>
+                      Approve cancellation
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
