@@ -41,7 +41,7 @@ export default function LoginPage() {
       title="Sign in"
       subtitle="Use your account to checkout, view orders, and save your wishlist."
     >
-      <form onSubmit={submit} className="space-y-5">
+      <form onSubmit={submit} className="space-y-6">
         {error ? (
           <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3">{error}</p>
         ) : null}
@@ -78,18 +78,18 @@ export default function LoginPage() {
           />
         </div>
 
-        <Button type="submit" className="w-full h-11 text-base" disabled={busy}>
+        <Button type="submit" className="w-full h-12 text-base" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </Button>
 
-        <p className="text-center text-sm text-muted-foreground pt-2">
+        <p className="text-center text-sm text-muted-foreground pt-1">
           New to LUXE?{' '}
           <Link to={registerHref} className="text-accent font-medium hover:underline">
             Create an account
           </Link>
         </p>
 
-        <p className="text-xs text-muted-foreground text-center border-t border-border pt-6">
+        <p className="text-xs text-muted-foreground text-center border-t border-border pt-6 mt-2">
           Demo seed: user@example.com / password123
         </p>
       </form>

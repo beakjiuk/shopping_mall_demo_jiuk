@@ -36,24 +36,28 @@ export default function AuthLayout({ title, subtitle, variant = 'login', childre
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-20">
+      <div className="flex flex-1 flex-col justify-center px-5 py-10 sm:px-10 sm:py-12 lg:px-16 xl:px-20">
         <div className="w-full max-w-md mx-auto">
-          <Link
-            to="/products"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Continue shopping
-          </Link>
+          <div className="mb-6 sm:mb-8">
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Continue shopping
+            </Link>
+          </div>
 
-          <Link to="/" className="inline-block text-3xl font-bold tracking-tight hover:opacity-90 transition-opacity">
-            LUXE
-          </Link>
+          <div className="rounded-2xl border border-border bg-card/70 backdrop-blur-sm px-5 py-6 sm:px-7 sm:py-8 shadow-sm">
+            <Link to="/" className="inline-block text-2xl sm:text-3xl font-bold tracking-tight hover:opacity-90 transition-opacity">
+              LUXE
+            </Link>
 
-          <h1 className="mt-8 text-3xl sm:text-4xl font-semibold tracking-tight">{title}</h1>
-          {subtitle ? <p className="mt-3 text-muted-foreground leading-relaxed">{subtitle}</p> : null}
+            <h1 className="mt-6 text-3xl sm:text-4xl font-semibold tracking-tight leading-tight">{title}</h1>
+            {subtitle ? <p className="mt-3 text-muted-foreground leading-relaxed">{subtitle}</p> : null}
 
-          <div className="mt-10">{children}</div>
+            <div className="mt-8 sm:mt-10">{children}</div>
+          </div>
         </div>
       </div>
     </div>
